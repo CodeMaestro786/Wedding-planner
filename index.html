@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wedding Planner</title>
+  <title>Muhammed Azhar & Humaira's Wedding Planner</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Our Wedding Planner</h1>
+  <h1>Muhammed Azhar ❤ Humaira</h1>
+  <p>Welcome to your wedding planner!</p>
 
   <section id="countdown">
     <h2>Countdown to the Big Day</h2>
@@ -16,10 +17,27 @@
   <section id="checklist">
     <h2>Checklist</h2>
     <ul id="task-list">
-      <li><input type="checkbox"> Book Venue</li>
-      <li><input type="checkbox"> Buy Rings</li>
-      <li><input type="checkbox"> Hire Photographer</li>
+      <li><input type="checkbox" id="task1"> Book Venue</li>
+      <li><input type="checkbox" id="task2"> Buy Rings</li>
+      <li><input type="checkbox" id="task3"> Hire Photographer</li>
+      <li><input type="checkbox" id="task4"> Send Invitations</li>
+      <li><input type="checkbox" id="task5"> Final Dress Fitting</li>
     </ul>
+  </section>
+
+  <section id="questions">
+    <h2>Planning Questions</h2>
+    <label>Where will the wedding take place?</label><br>
+    <input type="text" id="venue" placeholder="Type your answer here"><br><br>
+    
+    <label>Who will be the best man?</label><br>
+    <input type="text" id="bestMan" placeholder="Type your answer here"><br><br>
+
+    <label>What is your dream honeymoon destination?</label><br>
+    <input type="text" id="honeymoon" placeholder="Type your answer here"><br><br>
+
+    <button onclick="saveAnswers()">Save Answers</button>
+    <p id="saved-message" style="color: green;"></p>
   </section>
 
   <script src="script.js"></script>
