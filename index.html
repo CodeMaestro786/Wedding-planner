@@ -4,13 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Planner Dashboard</title>
+    <title>Personal Wedding Planner</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="welcome-screen" id="welcome-screen">
+        <h1>Welcome to Your Wedding Planner</h1>
+        <form id="user-form">
+            <input type="text" id="name" placeholder="Your Name" required />
+            <input type="text" id="partner" placeholder="Partner's Name" required />
+            <input type="number" id="month" placeholder="Wedding Month (1-12)" min="1" max="12" required />
+            <input type="number" id="day" placeholder="Wedding Day (1-31)" min="1" max="31" required />
+            <input type="number" id="year" placeholder="Wedding Year (e.g., 2025)" min="2024" required />
+            <button type="submit">Start Planning</button>
+        </form>
+    </div>
+
+    <div class="app-container" id="app-container" style="display:none;">
         <aside class="sidebar">
             <h2>Wedding Planner</h2>
+            <p id="greeting"></p>
             <nav>
                 <ul>
                     <li><a href="#">Dashboard</a></li>
@@ -24,22 +37,57 @@
             </nav>
         </aside>
         <main class="main-content">
-            <h1>Welcome Back!</h1>
+            <h1>Wedding Overview</h1>
             <div class="dashboard-cards">
                 <div class="card">
                     <h3>Countdown</h3>
-                    <p>150 Days Left</p>
+                    <p id="countdown"></p>
                 </div>
                 <div class="card">
                     <h3>Task Progress</h3>
-                    <p>65% Completed</p>
+                    <p>0% Completed</p>
                 </div>
                 <div class="card">
-                    <h3>Budget Used</h3>
-                    <p>R15,000 / R40,000</p>
+                    <h3>Budget Overview</h3>
+                    <p>R0 / R40,000</p>
                 </div>
             </div>
         </main>
     </div>
+
+    <script>
+        const form = document.getElementById('user-form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const partner = document.getElementById('partner').value;
+            const month = parseInt(document.getElementById('month').value) - 1;
+            const day = parseInt(document.getElementById('day').value);
+            const year = parseInt(document.getElementById('year').value);
+
+            const greeting = document.getElementById('greeting');
+            greeting.textContent = `👰🏽 Hello ${name} & ${partner}!`;
+
+            const weddingDate = new Date(year, month, day);
+            const countdownEl = document.getElementById('countdown');
+
+            function updateCountdown() {
+                const now = new Date();
+                const diff = weddingDate - now;
+                if (diff <= 0) {
+                    countdownEl.textContent = "🎉 It's your big day!";
+                    return;
+                }
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                countdownEl.textContent = `${days} days left`;
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 86400000); // Update once a day
+
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
+        });
+    </script>
 </body>
 </html>
