@@ -1,45 +1,45 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Muhammed Azhar & Humaira's Wedding Planner</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Planner Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Muhammed Azhar ❤ Humaira</h1>
-  <p>Welcome to your wedding planner!</p>
-
-  <section id="countdown">
-    <h2>Countdown to the Big Day</h2>
-    <p id="timer"></p>
-  </section>
-
-  <section id="checklist">
-    <h2>Checklist</h2>
-    <ul id="task-list">
-      <li><input type="checkbox" id="task1"> Book Venue</li>
-      <li><input type="checkbox" id="task2"> Buy Rings</li>
-      <li><input type="checkbox" id="task3"> Hire Photographer</li>
-      <li><input type="checkbox" id="task4"> Send Invitations</li>
-      <li><input type="checkbox" id="task5"> Final Dress Fitting</li>
-    </ul>
-  </section>
-
-  <section id="questions">
-    <h2>Planning Questions</h2>
-    <label>Where will the wedding take place?</label><br>
-    <input type="text" id="venue" placeholder="Type your answer here"><br><br>
-    
-    <label>Who will be the best man?</label><br>
-    <input type="text" id="bestMan" placeholder="Type your answer here"><br><br>
-
-    <label>What is your dream honeymoon destination?</label><br>
-    <input type="text" id="honeymoon" placeholder="Type your answer here"><br><br>
-
-    <button onclick="saveAnswers()">Save Answers</button>
-    <p id="saved-message" style="color: green;"></p>
-  </section>
-
-  <script src="script.js"></script>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>Wedding Planner</h2>
+            <nav>
+                <ul>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Checklist</a></li>
+                    <li><a href="#">Budget</a></li>
+                    <li><a href="#">Guests</a></li>
+                    <li><a href="#">Vendors</a></li>
+                    <li><a href="#">Mood Board</a></li>
+                    <li><a href="#">Timeline</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <h1>Welcome Back!</h1>
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>Countdown</h3>
+                    <p>150 Days Left</p>
+                </div>
+                <div class="card">
+                    <h3>Task Progress</h3>
+                    <p>65% Completed</p>
+                </div>
+                <div class="card">
+                    <h3>Budget Used</h3>
+                    <p>R15,000 / R40,000</p>
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
 </html>
