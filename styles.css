@@ -1,114 +1,90 @@
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #fff5f8;
-    color: #333;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0 15px;
+  background-color: #fff9f9;
+  color: #333;
 }
 
-.welcome-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 50px 20px;
-    text-align: center;
+header {
+  text-align: center;
+  padding: 20px 10px;
+  background-color: #c94f7c;
+  color: white;
 }
 
-.welcome-screen h1 {
-    margin-bottom: 20px;
-    color: #c94f7c;
+form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
 }
 
-form input {
-    display: block;
-    margin: 10px auto;
-    padding: 10px;
-    width: 80%;
-    max-width: 300px;
+form input, form select {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
 }
 
 form button {
-    padding: 10px 20px;
-    background-color: #c94f7c;
-    color: white;
-    border: none;
-    cursor: pointer;
-    margin-top: 15px;
-    border-radius: 5px;
+  padding: 10px 20px;
+  border: none;
+  background-color: white;
+  color: #c94f7c;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
-.app-container {
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
+main {
+  padding: 20px;
 }
 
-.sidebar {
-    background-color: #ffe6f0;
-    padding: 20px;
-    width: 250px;
-    flex-shrink: 0;
+section {
+  margin-bottom: 30px;
 }
 
-.sidebar h2 {
-    color: #c94f7c;
-    margin-bottom: 10px;
+input, select {
+  padding: 10px;
+  margin-right: 5px;
 }
 
-.sidebar p {
-    margin-bottom: 20px;
-    font-weight: bold;
+button {
+  padding: 10px 20px;
+  background-color: #c94f7c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.sidebar ul {
-    list-style: none;
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
 }
 
-.sidebar ul li {
-    margin-bottom: 15px;
+.moodboard-gallery {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.sidebar ul li a {
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
+.moodboard-gallery img {
+  width: 150px;
+  height: auto;
+  border-radius: 8px;
 }
 
-.main-content {
-    padding: 30px;
-    flex-grow: 1;
-}
+@media screen and (max-width: 768px) {
+  form {
+    flex-direction: column;
+  }
 
-.dashboard-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.card {
-    background-color: white;
-    padding: 20px;
-    width: 200px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100%;
-    }
-    .dashboard-cards {
-        justify-content: center;
-    }
+  .moodboard-gallery img {
+    width: 100%;
+    max-width: 300px;
+  }
 }
