@@ -2,7 +2,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyBGN_wcJR7xyTssEnZPUNlsyoPf3UXOokQ",
   authDomain: "wedding-planner-6646f.firebaseapp.com",
-  databaseURL: "https://wedding-planner-6646f-default-rtdb.firebaseio.com/",
+  databaseURL: "https://wedding-planner-6646f-default-rtdb.firebaseio.com",
   projectId: "wedding-planner-6646f",
   storageBucket: "",
   messagingSenderId: "922613052296",
@@ -10,9 +10,21 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth();
+let database, auth;
+try {
+  firebase.initializeApp(firebaseConfig);
+  database = firebase.database();
+  auth = firebase.auth();
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+  document.getElementById('loadingScreen').innerHTML = `
+    <div class="error-message">
+      <h2>Initialization Error</h2>
+      <p>Failed to connect to the server. Please refresh the page.</p>
+      <button onclick="window.location.reload()">Refresh</button>
+    </div>
+  `;
+}
 
 // ImgBB Configuration
 const IMGBB_API_KEY = '8b6790dd905e9426a5d92665c9e012f2';
@@ -45,124 +57,124 @@ let partnerId = null;
 let coupleId = null;
 
 // Initialize the app
-function initApp() {
-  // Initialize file upload listener
-  document.getElementById('image-upload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    
-    if (file) {
-      // Validate file type
-      if (!file.type.match('image.*')) {
-        showNotification('Please select an image file (JPEG, PNG, etc.)', 'error');
-        return;
-      }
-      
-      // Validate file size (ImgBB has 32MB limit for free tier)
-      if (file.size > 32 * 1024 * 1024) {
-        showNotification('Image must be smaller than 32MB', 'error');
-        return;
-      }
-      
-      selectedFile = file;
-      uploadBtn.disabled = false;
-      showNotification(`Ready to upload: ${file.name}`, 'success');
-    } else {
-      selectedFile = null;
-      uploadBtn.disabled = true;
-    }
-  });
-
-  // Try to authenticate anonymously
-  auth.signInAnonymously()
-    .then(() => {
-      // Check if there's a couple ID in the URL
-      const urlParams = new URLSearchParams(window.location.search);
-      coupleId = urlParams.get('coupleId');
-      
-      if (coupleId) {
-        // Join existing couple data
-        joinCouple(coupleId);
-      } else {
-        // Create new couple data
-        userId = auth.currentUser.uid;
-        checkForExistingData();
-      }
-    })
-    .catch(error => {
-      console.error("Authentication failed:", error);
-      showNotification("Failed to connect. Please refresh the page.", 'error');
-    });
-}
-
-// Check if user already has data
-function checkForExistingData() {
-  database.ref(`users/${userId}`).once('value')
-    .then(snapshot => {
-      if (snapshot.exists()) {
-        // User has existing data, load it
-        coupleId = snapshot.val().coupleId;
-        loadCoupleData();
-      } else {
-        // New user, show form
-        hideLoadingScreen();
-      }
-    });
-}
-
-// Join existing couple data
-function joinCouple(coupleId) {
-  userId = auth.currentUser.uid;
+async function initApp() {
+  showLoading();
   
-  // Check if this user is already part of the couple
-  database.ref(`couples/${coupleId}/partners`).once('value')
-    .then(snapshot => {
-      const partners = snapshot.val() || [];
-      
-      if (partners.includes(userId)) {
-        // User is already part of this couple
-        loadCoupleData();
-      } else if (partners.length < 2) {
-        // Add user to the couple
-        partners.push(userId);
-        database.ref(`couples/${coupleId}/partners`).set(partners)
-          .then(() => {
-            // Save couple ID to user's record
-            database.ref(`users/${userId}`).set({ coupleId })
-              .then(() => {
-                loadCoupleData();
-              });
-          });
-      } else {
-        // Couple already has 2 partners
-        showNotification("This wedding already has two partners linked.", 'error');
-        window.location.href = window.location.pathname; // Remove coupleId from URL
+  try {
+    // Initialize file upload listener
+    document.getElementById('image-upload').addEventListener('change', handleFileSelect);
+    uploadBtn.addEventListener('click', uploadImage);
+
+    // Try to authenticate anonymously
+    await auth.signInAnonymously();
+    userId = auth.currentUser.uid;
+    
+    // Check if there's a couple ID in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    coupleId = urlParams.get('coupleId');
+    
+    if (coupleId) {
+      await joinCouple(coupleId);
+    } else {
+      await checkForExistingData();
+    }
+  } catch (error) {
+    console.error("Initialization error:", error);
+    showNotification("Failed to initialize app. Please refresh.", 'error');
+    hideLoadingScreen();
+  }
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  
+  if (file) {
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      showNotification('Please select an image file (JPEG, PNG, etc.)', 'error');
+      return;
+    }
+    
+    // Validate file size (32MB limit)
+    if (file.size > 32 * 1024 * 1024) {
+      showNotification('Image must be smaller than 32MB', 'error');
+      return;
+    }
+    
+    selectedFile = file;
+    uploadBtn.disabled = false;
+    showNotification(`Ready to upload: ${file.name}`, 'success');
+  } else {
+    selectedFile = null;
+    uploadBtn.disabled = true;
+  }
+}
+
+async function checkForExistingData() {
+  try {
+    const snapshot = await database.ref(`users/${userId}`).once('value');
+    if (snapshot.exists()) {
+      coupleId = snapshot.val().coupleId;
+      await loadCoupleData();
+    } else {
+      hideLoadingScreen();
+    }
+  } catch (error) {
+    console.error("Error checking for existing data:", error);
+    showNotification("Error loading your data", 'error');
+    hideLoadingScreen();
+  }
+}
+
+async function joinCouple(coupleId) {
+  try {
+    const snapshot = await database.ref(`couples/${coupleId}/partners`).once('value');
+    const partners = snapshot.val() || [];
+    
+    if (partners.includes(userId)) {
+      await loadCoupleData();
+    } else if (partners.length < 2) {
+      partners.push(userId);
+      await database.ref(`couples/${coupleId}/partners`).set(partners);
+      await database.ref(`users/${userId}`).set({ coupleId });
+      await loadCoupleData();
+    } else {
+      showNotification("This wedding already has two partners linked.", 'error');
+      window.location.href = window.location.pathname;
+    }
+  } catch (error) {
+    console.error("Error joining couple:", error);
+    showNotification("Failed to join wedding data", 'error');
+    hideLoadingScreen();
+  }
+}
+
+async function loadCoupleData() {
+  try {
+    database.ref(`couples/${coupleId}`).on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        weddingData = data.weddingData || {};
+        tasks = data.tasks || [];
+        expenses = data.expenses || [];
+        guestList = data.guestList || [];
+        events = data.events || [];
+        moodboardImages = data.moodboard || [];
+        
+        updateUI();
+        hideLoadingScreen();
+        
+        const partners = data.partners || [];
+        partnerId = partners.find(id => id !== userId);
       }
     });
+  } catch (error) {
+    console.error("Error loading couple data:", error);
+    showNotification("Failed to load wedding data", 'error');
+    hideLoadingScreen();
+  }
 }
 
-// Load couple data
-function loadCoupleData() {
-  database.ref(`couples/${coupleId}`).on('value', snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      weddingData = data.weddingData || {};
-      tasks = data.tasks || [];
-      expenses = data.expenses || [];
-      guestList = data.guestList || [];
-      events = data.events || [];
-      moodboardImages = data.moodboard || [];
-      
-      updateUI();
-      hideLoadingScreen();
-      
-      // Set partner ID
-      const partners = data.partners || [];
-      partnerId = partners.find(id => id !== userId);
-    }
-  });
-}
-
-// Update UI with loaded data
 function updateUI() {
   // Update header
   if (weddingData.yourName) {
@@ -204,7 +216,6 @@ function updateUI() {
   renderMoodBoard();
 }
 
-// Get month index from name
 function getMonthIndex(monthName) {
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -213,7 +224,6 @@ function getMonthIndex(monthName) {
   return months.indexOf(monthName);
 }
 
-// Update countdown
 function updateCountdown(weddingDate) {
   const now = new Date();
   const diff = weddingDate - now;
@@ -251,7 +261,7 @@ function updateCountdown(weddingDate) {
 }
 
 // Save wedding details
-userForm.addEventListener('submit', e => {
+userForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   const yourName = yourNameInput.value.trim();
@@ -273,36 +283,38 @@ userForm.addEventListener('submit', e => {
     weddingDay
   };
   
-  // If this is a new couple, create the couple record
-  if (!coupleId) {
-    coupleId = database.ref().child('couples').push().key;
-    database.ref(`couples/${coupleId}`).set({
-      partners: [userId],
-      weddingData,
-      tasks: [],
-      expenses: [],
-      guestList: [],
-      events: [],
-      moodboard: []
-    });
-    
-    // Save couple ID to user's record
-    database.ref(`users/${userId}`).set({ coupleId })
-      .then(() => {
-        // Generate shareable link
-        const shareLink = `${window.location.origin}${window.location.pathname}?coupleId=${coupleId}`;
-        showNotification(`Wedding details saved! Share this link with your partner: ${shareLink}`, 'success');
-        
-        // Update UI
-        updateUI();
+  try {
+    // If this is a new couple, create the couple record
+    if (!coupleId) {
+      coupleId = database.ref().child('couples').push().key;
+      await database.ref(`couples/${coupleId}`).set({
+        partners: [userId],
+        weddingData,
+        tasks: [],
+        expenses: [],
+        guestList: [],
+        events: [],
+        moodboard: []
       });
-  } else {
-    // Update existing couple data
-    database.ref(`couples/${coupleId}/weddingData`).set(weddingData)
-      .then(() => {
-        showNotification('Wedding details updated!', 'success');
-        updateUI();
-      });
+      
+      // Save couple ID to user's record
+      await database.ref(`users/${userId}`).set({ coupleId });
+      
+      // Generate shareable link
+      const shareLink = `${window.location.origin}${window.location.pathname}?coupleId=${coupleId}`;
+      showNotification(`Wedding details saved! Share this link with your partner: ${shareLink}`, 'success');
+      
+      // Update UI
+      updateUI();
+    } else {
+      // Update existing couple data
+      await database.ref(`couples/${coupleId}/weddingData`).set(weddingData);
+      showNotification('Wedding details updated!', 'success');
+      updateUI();
+    }
+  } catch (error) {
+    console.error("Error saving wedding details:", error);
+    showNotification("Failed to save wedding details", 'error');
   }
 });
 
@@ -311,7 +323,10 @@ function addTask() {
   const taskInput = document.getElementById('task');
   const task = taskInput.value.trim();
   
-  if (!task) return;
+  if (!task) {
+    showNotification('Please enter a task', 'warning');
+    return;
+  }
   
   tasks.push({
     id: Date.now().toString(),
@@ -324,11 +339,16 @@ function addTask() {
   taskInput.value = '';
 }
 
-function saveTasks() {
+async function saveTasks() {
   if (!coupleId) return;
   
-  database.ref(`couples/${coupleId}/tasks`).set(tasks)
-    .then(() => renderTasks());
+  try {
+    await database.ref(`couples/${coupleId}/tasks`).set(tasks);
+    renderTasks();
+  } catch (error) {
+    console.error("Error saving tasks:", error);
+    showNotification("Failed to save tasks", 'error');
+  }
 }
 
 function renderTasks() {
@@ -376,9 +396,9 @@ function toggleTaskCompletion(taskId, completed) {
   }
 }
 
-function deleteTask(taskId) {
+async function deleteTask(taskId) {
   tasks = tasks.filter(task => task.id !== taskId);
-  saveTasks();
+  await saveTasks();
 }
 
 // Budget functions
@@ -403,11 +423,16 @@ function addExpense() {
   document.getElementById('expense-amount').value = '';
 }
 
-function saveExpenses() {
+async function saveExpenses() {
   if (!coupleId) return;
   
-  database.ref(`couples/${coupleId}/expenses`).set(expenses)
-    .then(() => renderExpenses());
+  try {
+    await database.ref(`couples/${coupleId}/expenses`).set(expenses);
+    renderExpenses();
+  } catch (error) {
+    console.error("Error saving expenses:", error);
+    showNotification("Failed to save expenses", 'error');
+  }
 }
 
 function renderExpenses() {
@@ -449,9 +474,9 @@ function renderExpenses() {
   });
 }
 
-function deleteExpense(expenseId) {
+async function deleteExpense(expenseId) {
   expenses = expenses.filter(expense => expense.id !== expenseId);
-  saveExpenses();
+  await saveExpenses();
 }
 
 // Guest list functions
@@ -478,11 +503,16 @@ function addGuest() {
   document.getElementById('guest-contact').value = '';
 }
 
-function saveGuestList() {
+async function saveGuestList() {
   if (!coupleId) return;
   
-  database.ref(`couples/${coupleId}/guestList`).set(guestList)
-    .then(() => renderGuestList());
+  try {
+    await database.ref(`couples/${coupleId}/guestList`).set(guestList);
+    renderGuestList();
+  } catch (error) {
+    console.error("Error saving guest list:", error);
+    showNotification("Failed to save guest list", 'error');
+  }
 }
 
 function renderGuestList() {
@@ -533,17 +563,17 @@ function renderGuestList() {
   });
 }
 
-function updateGuestRSVP(guestId, rsvp) {
+async function updateGuestRSVP(guestId, rsvp) {
   const guest = guestList.find(g => g.id === guestId);
   if (guest) {
     guest.rsvp = rsvp;
-    saveGuestList();
+    await saveGuestList();
   }
 }
 
-function deleteGuest(guestId) {
+async function deleteGuest(guestId) {
   guestList = guestList.filter(guest => guest.id !== guestId);
-  saveGuestList();
+  await saveGuestList();
 }
 
 // Timeline functions
@@ -568,11 +598,16 @@ function addEvent() {
   document.getElementById('event-time').value = '';
 }
 
-function saveEvents() {
+async function saveEvents() {
   if (!coupleId) return;
   
-  database.ref(`couples/${coupleId}/events`).set(events)
-    .then(() => renderTimeline());
+  try {
+    await database.ref(`couples/${coupleId}/events`).set(events);
+    renderTimeline();
+  } catch (error) {
+    console.error("Error saving events:", error);
+    showNotification("Failed to save events", 'error');
+  }
 }
 
 function renderTimeline() {
@@ -612,18 +647,19 @@ function renderTimeline() {
   });
 }
 
-function deleteEvent(eventId) {
+async function deleteEvent(eventId) {
   events = events.filter(event => event.id !== eventId);
-  saveEvents();
+  await saveEvents();
 }
 
-// Mood Board functions
+// Mood Board functions with ImgBB
 function uploadImage() {
   if (!selectedFile) {
     showNotification('No image selected', 'error');
     return;
   }
 
+  showLoading();
   const progressElement = document.getElementById('upload-progress');
   progressElement.innerHTML = `
     <div class="upload-progress-bar">
@@ -640,9 +676,9 @@ function uploadImage() {
 
   xhr.upload.onprogress = function(e) {
     if (e.lengthComputable) {
-      const percentComplete = Math.round((e.loaded / e.total) * 100);
-      document.querySelector('.progress-fill').style.width = `${percentComplete}%`;
-      document.querySelector('.upload-status').textContent = `Uploading: ${percentComplete}%`;
+      const progress = (e.loaded / e.total) * 100;
+      document.querySelector('.progress-fill').style.width = `${progress}%`;
+      document.querySelector('.upload-status').textContent = `Uploading: ${Math.round(progress)}%`;
     }
   };
 
@@ -651,18 +687,19 @@ function uploadImage() {
       const response = JSON.parse(xhr.responseText);
       if (response.success) {
         addImageToMoodBoard(response.data.url);
+        saveImageToDatabase(response.data.url);
         progressElement.innerHTML = `
           <div class="upload-success">
             <i class="fas fa-check-circle"></i> Upload successful!
           </div>
         `;
-        saveImageToDatabase(response.data.url);
       } else {
         throw new Error(response.error.message || 'Upload failed');
       }
     } else {
       throw new Error('Upload failed');
     }
+    hideLoading();
   };
 
   xhr.onerror = function() {
@@ -672,6 +709,7 @@ function uploadImage() {
       </div>
     `;
     showNotification('Image upload failed. Please try again.', 'error');
+    hideLoading();
   };
 
   xhr.send(formData);
@@ -700,13 +738,18 @@ function addImageToMoodBoard(imageUrl) {
   uploadBtn.disabled = true;
 }
 
-function saveImageToDatabase(imageUrl) {
-  if (coupleId) {
-    database.ref(`couples/${coupleId}/moodboard`).push().set({
+async function saveImageToDatabase(imageUrl) {
+  if (!coupleId) return;
+  
+  try {
+    await database.ref(`couples/${coupleId}/moodboard`).push().set({
       url: imageUrl,
       timestamp: new Date().toISOString(),
       uploadedBy: userId
     });
+  } catch (error) {
+    console.error("Error saving image:", error);
+    showNotification("Failed to save image", 'error');
   }
 }
 
@@ -724,7 +767,7 @@ function renderMoodBoard() {
   });
 }
 
-function removeImage(button, imageUrl) {
+async function removeImage(button, imageUrl) {
   const imgItem = button.closest('.moodboard-item');
   imgItem.classList.add('removing');
   
@@ -795,12 +838,14 @@ function showNotification(message, type = 'success') {
   }, 5000);
 }
 
-// Hide loading screen
-function hideLoadingScreen() {
+function showLoading() {
+  loadingScreen.style.display = 'flex';
+  setTimeout(() => loadingScreen.style.opacity = '1', 10);
+}
+
+function hideLoading() {
   loadingScreen.style.opacity = '0';
-  setTimeout(() => {
-    loadingScreen.style.display = 'none';
-  }, 500);
+  setTimeout(() => loadingScreen.style.display = 'none', 500);
 }
 
 // Smooth scrolling for navigation
