@@ -897,11 +897,15 @@ function showLoading() {
   setTimeout(() => loadingScreen.style.opacity = '1', 10);
 }
 
-function hideLoading() {
-  loadingScreen.style.opacity = '0';
-  setTimeout(() => {
-    loadingScreen.style.display = 'none';
-  }, 500);
+function showErrorScreen(message) {
+  loadingScreen.innerHTML = `
+    <div class="error-message">
+      <h2>Error</h2>
+      <p>${message}</p>
+      <button onclick="window.location.reload()">Retry</button>
+      <button onclick="forceHideLoading()">Continue Anyway</button>
+    </div>
+  `;
 }
 
 // Debug function to manually hide loading screen
