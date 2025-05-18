@@ -3,171 +3,236 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Wedding Planner</title>
+  <title>Mr & Mrs Syed Wedding Planner</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Welcome to Your Wedding Planner</h1>
-    <form id="userForm">
-      <input type="text" id="yourName" placeholder="Your name..." required />
-      <input type="text" id="partnerName" placeholder="Partner's name..." required />
-      <input type="number" id="weddingYear" placeholder="Wedding year..." required />
-      <select id="weddingMonth">
-        <option value="">Month</option>
-        <option>January</option><option>February</option><option>March</option>
-        <option>April</option><option>May</option><option>June</option>
-        <option>July</option><option>August</option><option>September</option>
-        <option>October</option><option>November</option><option>December</option>
-      </select>
-      <input type="number" id="weddingDay" placeholder="Day..." required />
-      <button type="submit">Save</button>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-content">
+      <div class="ring"></div>
+      <span class="loading-text">Loading your wedding details...</span>
+    </div>
+  </div>
+
+  <header class="animate__animated animate__fadeIn">
+    <div class="couple-names">
+      <h1 id="yourNameDisplay">Your</h1>
+      <span class="and">&</span>
+      <h1 id="partnerNameDisplay">Partner</h1>
+    </div>
+    <p class="wedding-date" id="weddingDateDisplay">Wedding Date</p>
+    <div class="countdown" id="countdown"></div>
+    
+    <form id="userForm" class="animate__animated animate__fadeInUp">
+      <div class="form-group">
+        <input type="text" id="yourName" placeholder="Your name..." required />
+      </div>
+      <div class="form-group">
+        <input type="text" id="partnerName" placeholder="Partner's name..." required />
+      </div>
+      <div class="form-group date-group">
+        <input type="number" id="weddingYear" placeholder="Year" required min="2023" max="2030" />
+        <select id="weddingMonth" required>
+          <option value="">Month</option>
+          <option>January</option><option>February</option><option>March</option>
+          <option>April</option><option>May</option><option>June</option>
+          <option>July</option><option>August</option><option>September</option>
+          <option>October</option><option>November</option><option>December</option>
+        </select>
+        <input type="number" id="weddingDay" placeholder="Day" required min="1" max="31" />
+      </div>
+      <button type="submit" class="save-btn">
+        <i class="fas fa-heart"></i> Save Details
+      </button>
     </form>
   </header>
 
+  <nav class="main-nav animate__animated animate__fadeIn">
+    <ul>
+      <li><a href="#checklist" class="active"><i class="fas fa-tasks"></i> Checklist</a></li>
+      <li><a href="#budget"><i class="fas fa-money-bill-wave"></i> Budget</a></li>
+      <li><a href="#guestlist"><i class="fas fa-users"></i> Guests</a></li>
+      <li><a href="#timeline"><i class="fas fa-clock"></i> Timeline</a></li>
+      <li><a href="#moodboard"><i class="fas fa-images"></i> Mood Board</a></li>
+      <li><a href="#questions"><i class="fas fa-question-circle"></i> Questions</a></li>
+    </ul>
+  </nav>
+
   <main>
-    <section class="checklist-section">
-      <h2>Checklist</h2>
-      <input type="text" id="task" placeholder="Add a task..." />
-      <button onclick="addTask()">Add</button>
-      <ul id="task-list"></ul>
+    <section id="checklist" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-tasks"></i> Checklist</h2>
+      <div class="input-group">
+        <input type="text" id="task" placeholder="Add a task..." />
+        <button onclick="addTask()" class="add-btn"><i class="fas fa-plus"></i> Add</button>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="checklistProgress"></div>
+        <span id="progressText">0% Complete</span>
+      </div>
+      <ul id="task-list" class="styled-list"></ul>
     </section>
 
-    <section class="budget-section">
-      <h2>Budget Tracker</h2>
-      <input type="text" id="expense-name" placeholder="Expense name..." />
-      <input type="number" id="expense-amount" placeholder="Amount" />
-      <button onclick="addExpense()">Add</button>
-      <ul id="expense-list"></ul>
-      <p>Total: $<span id="total">0</span></p>
+    <section id="budget" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-money-bill-wave"></i> Budget Tracker</h2>
+      <div class="input-group">
+        <input type="text" id="expense-name" placeholder="Expense name..." />
+        <input type="number" id="expense-amount" placeholder="Amount" min="0" step="0.01" />
+        <button onclick="addExpense()" class="add-btn"><i class="fas fa-plus"></i> Add</button>
+      </div>
+      <div class="budget-summary">
+        <div class="budget-card">
+          <h3>Total Budget</h3>
+          <p>$<span id="total-budget">0</span></p>
+        </div>
+        <div class="budget-card">
+          <h3>Amount Spent</h3>
+          <p>$<span id="total-spent">0</span></p>
+        </div>
+        <div class="budget-card">
+          <h3>Remaining</h3>
+          <p>$<span id="remaining-budget">0</span></p>
+        </div>
+      </div>
+      <ul id="expense-list" class="styled-list"></ul>
     </section>
 
-    <section class="guestlist-section">
-      <h2>Guest List</h2>
-      <input type="text" id="guest-name" placeholder="Guest name..." />
-      <input type="text" id="guest-contact" placeholder="Contact info..." />
-      <select id="guest-rsvp">
-        <option value="Pending">Pending</option>
-        <option value="Accepted">Accepted</option>
-        <option value="Declined">Declined</option>
-      </select>
-      <button onclick="addGuest()">Add Guest</button>
-      <ul id="guest-list"></ul>
+    <section id="guestlist" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-users"></i> Guest List</h2>
+      <div class="input-group">
+        <input type="text" id="guest-name" placeholder="Guest name..." />
+        <input type="email" id="guest-contact" placeholder="Email..." />
+        <select id="guest-rsvp">
+          <option value="Pending">Pending</option>
+          <option value="Accepted">Accepted</option>
+          <option value="Declined">Declined</option>
+        </select>
+        <button onclick="addGuest()" class="add-btn"><i class="fas fa-plus"></i> Add</button>
+      </div>
+      <div class="guest-stats">
+        <div class="stat-card">
+          <h3>Total Guests</h3>
+          <p id="total-guests">0</p>
+        </div>
+        <div class="stat-card accepted">
+          <h3>Accepted</h3>
+          <p id="accepted-guests">0</p>
+        </div>
+        <div class="stat-card declined">
+          <h3>Declined</h3>
+          <p id="declined-guests">0</p>
+        </div>
+        <div class="stat-card pending">
+          <h3>Pending</h3>
+          <p id="pending-guests">0</p>
+        </div>
+      </div>
+      <ul id="guest-list" class="styled-list"></ul>
     </section>
 
-    <section class="timeline-section">
-      <h2>Timeline</h2>
-      <input type="text" id="event-title" placeholder="Event title..." />
-      <input type="datetime-local" id="event-time" />
-      <button onclick="addEvent()">Add Event</button>
-      <ul id="timeline-list"></ul>
+    <section id="timeline" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-clock"></i> Wedding Timeline</h2>
+      <div class="input-group">
+        <input type="text" id="event-title" placeholder="Event title..." />
+        <input type="datetime-local" id="event-time" />
+        <button onclick="addEvent()" class="add-btn"><i class="fas fa-plus"></i> Add</button>
+      </div>
+      <div class="timeline-container" id="timeline-list"></div>
     </section>
 
-    <section class="moodboard-section">
-      <h2>Mood Board</h2>
-      <input type="url" id="image-url" placeholder="Paste image URL..." />
-      <button onclick="addImage()">Add Image</button>
+    <section id="moodboard" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-images"></i> Mood Board</h2>
+      <div class="upload-container">
+        <label for="image-upload" class="upload-label">
+          <i class="fas fa-cloud-upload-alt"></i> Choose Image
+          <input type="file" id="image-upload" accept="image/*" style="display:none;" />
+        </label>
+        <button id="upload-btn" class="add-btn" disabled>
+          <i class="fas fa-upload"></i> Upload
+        </button>
+      </div>
+      <div class="upload-options">
+        <button onclick="openPinterest()" class="pinterest-btn">
+          <i class="fab fa-pinterest"></i> Get Pinterest Ideas
+        </button>
+      </div>
+      <div id="upload-progress"></div>
       <div id="moodboard-gallery" class="moodboard-gallery"></div>
+    </section>
+
+    <section id="questions" class="section animate__animated animate__fadeIn">
+      <h2><i class="fas fa-question-circle"></i> Pre-Marriage Questions</h2>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('getting-to-know')">Getting to Know</button>
+        <button class="tab-btn" onclick="openTab('future-plans')">Future Plans</button>
+        <button class="tab-btn" onclick="openTab('values-beliefs')">Values & Beliefs</button>
+      </div>
+      
+      <div id="getting-to-know" class="tab-content" style="display: block;">
+        <div class="question-card">
+          <h3>What first attracted you to your partner?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+        <div class="question-card">
+          <h3>What's your favorite memory together so far?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="future-plans" class="tab-content">
+        <div class="question-card">
+          <h3>Where do you see yourselves in 5 years?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+        <div class="question-card">
+          <h3>How do you envision handling finances as a couple?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="values-beliefs" class="tab-content">
+        <div class="question-card">
+          <h3>What role will religion play in your marriage?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+        <div class="question-card">
+          <h3>How do you plan to handle conflicts in your relationship?</h3>
+          <textarea placeholder="Your answer..."></textarea>
+          <div class="partner-answer">
+            <h4>Partner's Answer:</h4>
+            <p class="placeholder">Waiting for partner's response...</p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
-  <script>
-    const tasks = [], expenses = [], guestList = [], events = [];
+  <div class="notification" id="notification"></div>
 
-    function addTask() {
-      const taskInput = document.getElementById('task');
-      if (!taskInput.value.trim()) return;
-      tasks.push(taskInput.value);
-      taskInput.value = '';
-      renderTasks();
-    }
-
-    function renderTasks() {
-      const list = document.getElementById('task-list');
-      list.innerHTML = '';
-      tasks.forEach(task => {
-        const li = document.createElement('li');
-        li.textContent = task;
-        list.appendChild(li);
-      });
-    }
-
-    function addExpense() {
-      const name = document.getElementById('expense-name').value.trim();
-      const amount = parseFloat(document.getElementById('expense-amount').value);
-      if (!name || isNaN(amount)) return;
-      expenses.push({ name, amount });
-      document.getElementById('expense-name').value = '';
-      document.getElementById('expense-amount').value = '';
-      renderExpenses();
-    }
-
-    function renderExpenses() {
-      const list = document.getElementById('expense-list');
-      const totalSpan = document.getElementById('total');
-      list.innerHTML = '';
-      let total = 0;
-      expenses.forEach(expense => {
-        const li = document.createElement('li');
-        li.textContent = ${expense.name}: $${expense.amount};
-        list.appendChild(li);
-        total += expense.amount;
-      });
-      totalSpan.textContent = total;
-    }
-
-    function addGuest() {
-      const name = document.getElementById('guest-name').value.trim();
-      const contact = document.getElementById('guest-contact').value.trim();
-      const rsvp = document.getElementById('guest-rsvp').value;
-      if (!name || !contact) return;
-      guestList.push({ name, contact, rsvp });
-      document.getElementById('guest-name').value = '';
-      document.getElementById('guest-contact').value = '';
-      renderGuestList();
-    }
-
-    function renderGuestList() {
-      const list = document.getElementById('guest-list');
-      list.innerHTML = '';
-      guestList.forEach(guest => {
-        const li = document.createElement('li');
-        li.textContent = ${guest.name} | ${guest.contact} | ${guest.rsvp};
-        list.appendChild(li);
-      });
-    }
-
-    function addEvent() {
-      const title = document.getElementById('event-title').value.trim();
-      const time = document.getElementById('event-time').value;
-      if (!title || !time) return;
-      events.push({ title, time });
-      document.getElementById('event-title').value = '';
-      document.getElementById('event-time').value = '';
-      renderTimeline();
-    }
-
-    function renderTimeline() {
-      const list = document.getElementById('timeline-list');
-      list.innerHTML = '';
-      events.sort((a, b) => new Date(a.time) - new Date(b.time));
-      events.forEach(event => {
-        const li = document.createElement('li');
-        li.textContent = ${new Date(event.time).toLocaleString()} - ${event.title};
-        list.appendChild(li);
-      });
-    }
-
-    function addImage() {
-      const url = document.getElementById('image-url').value.trim();
-      if (!url) return;
-      const gallery = document.getElementById('moodboard-gallery');
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = 'Mood board image';
-      gallery.appendChild(img);
-      document.getElementById('image-url').value = '';
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
