@@ -1,93 +1,173 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Wedding Planner</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Wedding Planner</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="welcome-screen" id="welcome-screen">
-        <h1>Welcome to Your Wedding Planner</h1>
-        <form id="user-form">
-            <input type="text" id="name" placeholder="Your Name" required />
-            <input type="text" id="partner" placeholder="Partner's Name" required />
-            <input type="number" id="month" placeholder="Wedding Month (1-12)" min="1" max="12" required />
-            <input type="number" id="day" placeholder="Wedding Day (1-31)" min="1" max="31" required />
-            <input type="number" id="year" placeholder="Wedding Year (e.g., 2025)" min="2024" required />
-            <button type="submit">Start Planning</button>
-        </form>
-    </div>
+  <header>
+    <h1>Welcome to Your Wedding Planner</h1>
+    <form id="userForm">
+      <input type="text" id="yourName" placeholder="Your name..." required />
+      <input type="text" id="partnerName" placeholder="Partner's name..." required />
+      <input type="number" id="weddingYear" placeholder="Wedding year..." required />
+      <select id="weddingMonth">
+        <option value="">Month</option>
+        <option>January</option><option>February</option><option>March</option>
+        <option>April</option><option>May</option><option>June</option>
+        <option>July</option><option>August</option><option>September</option>
+        <option>October</option><option>November</option><option>December</option>
+      </select>
+      <input type="number" id="weddingDay" placeholder="Day..." required />
+      <button type="submit">Save</button>
+    </form>
+  </header>
 
-    <div class="app-container" id="app-container" style="display:none;">
-        <aside class="sidebar">
-            <h2>Wedding Planner</h2>
-            <p id="greeting"></p>
-            <nav>
-                <ul>
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a href="#">Checklist</a></li>
-                    <li><a href="#">Budget</a></li>
-                    <li><a href="#">Guests</a></li>
-                    <li><a href="#">Vendors</a></li>
-                    <li><a href="#">Mood Board</a></li>
-                    <li><a href="#">Timeline</a></li>
-                </ul>
-            </nav>
-        </aside>
-        <main class="main-content">
-            <h1>Wedding Overview</h1>
-            <div class="dashboard-cards">
-                <div class="card">
-                    <h3>Countdown</h3>
-                    <p id="countdown"></p>
-                </div>
-                <div class="card">
-                    <h3>Task Progress</h3>
-                    <p>0% Completed</p>
-                </div>
-                <div class="card">
-                    <h3>Budget Overview</h3>
-                    <p>R0 / R40,000</p>
-                </div>
-            </div>
-        </main>
-    </div>
+  <main>
+    <section class="checklist-section">
+      <h2>Checklist</h2>
+      <input type="text" id="task" placeholder="Add a task..." />
+      <button onclick="addTask()">Add</button>
+      <ul id="task-list"></ul>
+    </section>
 
-    <script>
-        const form = document.getElementById('user-form');
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('name').value;
-            const partner = document.getElementById('partner').value;
-            const month = parseInt(document.getElementById('month').value) - 1;
-            const day = parseInt(document.getElementById('day').value);
-            const year = parseInt(document.getElementById('year').value);
+    <section class="budget-section">
+      <h2>Budget Tracker</h2>
+      <input type="text" id="expense-name" placeholder="Expense name..." />
+      <input type="number" id="expense-amount" placeholder="Amount" />
+      <button onclick="addExpense()">Add</button>
+      <ul id="expense-list"></ul>
+      <p>Total: $<span id="total">0</span></p>
+    </section>
 
-            const greeting = document.getElementById('greeting');
-            greeting.textContent = `👰🏽 Hello ${name} & ${partner}!`;
+    <section class="guestlist-section">
+      <h2>Guest List</h2>
+      <input type="text" id="guest-name" placeholder="Guest name..." />
+      <input type="text" id="guest-contact" placeholder="Contact info..." />
+      <select id="guest-rsvp">
+        <option value="Pending">Pending</option>
+        <option value="Accepted">Accepted</option>
+        <option value="Declined">Declined</option>
+      </select>
+      <button onclick="addGuest()">Add Guest</button>
+      <ul id="guest-list"></ul>
+    </section>
 
-            const weddingDate = new Date(year, month, day);
-            const countdownEl = document.getElementById('countdown');
+    <section class="timeline-section">
+      <h2>Timeline</h2>
+      <input type="text" id="event-title" placeholder="Event title..." />
+      <input type="datetime-local" id="event-time" />
+      <button onclick="addEvent()">Add Event</button>
+      <ul id="timeline-list"></ul>
+    </section>
 
-            function updateCountdown() {
-                const now = new Date();
-                const diff = weddingDate - now;
-                if (diff <= 0) {
-                    countdownEl.textContent = "🎉 It's your big day!";
-                    return;
-                }
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                countdownEl.textContent = `${days} days left`;
-            }
+    <section class="moodboard-section">
+      <h2>Mood Board</h2>
+      <input type="url" id="image-url" placeholder="Paste image URL..." />
+      <button onclick="addImage()">Add Image</button>
+      <div id="moodboard-gallery" class="moodboard-gallery"></div>
+    </section>
+  </main>
 
-            updateCountdown();
-            setInterval(updateCountdown, 86400000); // Update once a day
+  <script>
+    const tasks = [], expenses = [], guestList = [], events = [];
 
-            document.getElementById('welcome-screen').style.display = 'none';
-            document.getElementById('app-container').style.display = 'flex';
-        });
-    </script>
+    function addTask() {
+      const taskInput = document.getElementById('task');
+      if (!taskInput.value.trim()) return;
+      tasks.push(taskInput.value);
+      taskInput.value = '';
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = task;
+        list.appendChild(li);
+      });
+    }
+
+    function addExpense() {
+      const name = document.getElementById('expense-name').value.trim();
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+      if (!name || isNaN(amount)) return;
+      expenses.push({ name, amount });
+      document.getElementById('expense-name').value = '';
+      document.getElementById('expense-amount').value = '';
+      renderExpenses();
+    }
+
+    function renderExpenses() {
+      const list = document.getElementById('expense-list');
+      const totalSpan = document.getElementById('total');
+      list.innerHTML = '';
+      let total = 0;
+      expenses.forEach(expense => {
+        const li = document.createElement('li');
+        li.textContent = ${expense.name}: $${expense.amount};
+        list.appendChild(li);
+        total += expense.amount;
+      });
+      totalSpan.textContent = total;
+    }
+
+    function addGuest() {
+      const name = document.getElementById('guest-name').value.trim();
+      const contact = document.getElementById('guest-contact').value.trim();
+      const rsvp = document.getElementById('guest-rsvp').value;
+      if (!name || !contact) return;
+      guestList.push({ name, contact, rsvp });
+      document.getElementById('guest-name').value = '';
+      document.getElementById('guest-contact').value = '';
+      renderGuestList();
+    }
+
+    function renderGuestList() {
+      const list = document.getElementById('guest-list');
+      list.innerHTML = '';
+      guestList.forEach(guest => {
+        const li = document.createElement('li');
+        li.textContent = ${guest.name} | ${guest.contact} | ${guest.rsvp};
+        list.appendChild(li);
+      });
+    }
+
+    function addEvent() {
+      const title = document.getElementById('event-title').value.trim();
+      const time = document.getElementById('event-time').value;
+      if (!title || !time) return;
+      events.push({ title, time });
+      document.getElementById('event-title').value = '';
+      document.getElementById('event-time').value = '';
+      renderTimeline();
+    }
+
+    function renderTimeline() {
+      const list = document.getElementById('timeline-list');
+      list.innerHTML = '';
+      events.sort((a, b) => new Date(a.time) - new Date(b.time));
+      events.forEach(event => {
+        const li = document.createElement('li');
+        li.textContent = ${new Date(event.time).toLocaleString()} - ${event.title};
+        list.appendChild(li);
+      });
+    }
+
+    function addImage() {
+      const url = document.getElementById('image-url').value.trim();
+      if (!url) return;
+      const gallery = document.getElementById('moodboard-gallery');
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'Mood board image';
+      gallery.appendChild(img);
+      document.getElementById('image-url').value = '';
+    }
+  </script>
 </body>
 </html>
