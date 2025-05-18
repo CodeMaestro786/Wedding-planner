@@ -55,32 +55,51 @@ let moodboardImages = [];
 let userId = null;
 let partnerId = null;
 let coupleId = null;
+let loadingTimeout = null;
+
+// Debug helper
+function debugLog(...args) {
+  console.log('[DEBUG]', ...args);
+}
 
 // Initialize the app
 async function initApp() {
   showLoading();
+  debugLog("App initialization started");
   
+  // Set timeout safeguard
+  loadingTimeout = setTimeout(() => {
+    showNotification("Taking longer than expected to load...", 'warning');
+    debugLog("Loading timeout reached");
+  }, 5000);
+
   try {
     // Initialize file upload listener
     document.getElementById('image-upload').addEventListener('change', handleFileSelect);
     uploadBtn.addEventListener('click', uploadImage);
 
     // Try to authenticate anonymously
-    await auth.signInAnonymously();
-    userId = auth.currentUser.uid;
+    debugLog("Attempting anonymous auth");
+    const authResult = await auth.signInAnonymously();
+    userId = authResult.user.uid;
+    debugLog("Authenticated with UID:", userId);
     
     // Check if there's a couple ID in the URL
     const urlParams = new URLSearchParams(window.location.search);
     coupleId = urlParams.get('coupleId');
+    debugLog("Couple ID from URL:", coupleId);
     
     if (coupleId) {
+      debugLog("Joining existing couple");
       await joinCouple(coupleId);
     } else {
+      debugLog("Checking for existing data");
       await checkForExistingData();
     }
   } catch (error) {
     console.error("Initialization error:", error);
     showNotification("Failed to initialize app. Please refresh.", 'error');
+    clearTimeout(loadingTimeout);
     hideLoadingScreen();
   }
 }
@@ -89,13 +108,11 @@ function handleFileSelect(e) {
   const file = e.target.files[0];
   
   if (file) {
-    // Validate file type
     if (!file.type.match('image.*')) {
       showNotification('Please select an image file (JPEG, PNG, etc.)', 'error');
       return;
     }
     
-    // Validate file size (32MB limit)
     if (file.size > 32 * 1024 * 1024) {
       showNotification('Image must be smaller than 32MB', 'error');
       return;
@@ -112,30 +129,39 @@ function handleFileSelect(e) {
 
 async function checkForExistingData() {
   try {
+    debugLog("Checking for existing user data");
     const snapshot = await database.ref(`users/${userId}`).once('value');
+    
     if (snapshot.exists()) {
       coupleId = snapshot.val().coupleId;
+      debugLog("Found existing coupleId:", coupleId);
       await loadCoupleData();
     } else {
+      debugLog("No existing data found - showing form");
+      clearTimeout(loadingTimeout);
       hideLoadingScreen();
     }
   } catch (error) {
     console.error("Error checking for existing data:", error);
     showNotification("Error loading your data", 'error');
+    clearTimeout(loadingTimeout);
     hideLoadingScreen();
   }
 }
 
 async function joinCouple(coupleId) {
   try {
+    debugLog("Joining couple:", coupleId);
     const snapshot = await database.ref(`couples/${coupleId}/partners`).once('value');
     const partners = snapshot.val() || [];
     
     if (partners.includes(userId)) {
+      debugLog("User already in couple - loading data");
       await loadCoupleData();
     } else if (partners.length < 2) {
-      partners.push(userId);
-      await database.ref(`couples/${coupleId}/partners`).set(partners);
+      debugLog("Adding user to couple");
+      const updatedPartners = [...partners, userId];
+      await database.ref(`couples/${coupleId}/partners`).set(updatedPartners);
       await database.ref(`users/${userId}`).set({ coupleId });
       await loadCoupleData();
     } else {
@@ -145,37 +171,68 @@ async function joinCouple(coupleId) {
   } catch (error) {
     console.error("Error joining couple:", error);
     showNotification("Failed to join wedding data", 'error');
+    clearTimeout(loadingTimeout);
     hideLoadingScreen();
   }
 }
 
 async function loadCoupleData() {
   try {
-    database.ref(`couples/${coupleId}`).on('value', snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        weddingData = data.weddingData || {};
-        tasks = data.tasks || [];
-        expenses = data.expenses || [];
-        guestList = data.guestList || [];
-        events = data.events || [];
-        moodboardImages = data.moodboard || [];
+    debugLog("Loading couple data for:", coupleId);
+    const snapshot = await database.ref(`couples/${coupleId}`).once('value');
+    const data = snapshot.val();
+    
+    if (!data) {
+      debugLog("No data found for couple");
+      showNotification("No wedding data found", 'error');
+      clearTimeout(loadingTimeout);
+      hideLoadingScreen();
+      return;
+    }
+    
+    weddingData = data.weddingData || {};
+    tasks = data.tasks || [];
+    expenses = data.expenses || [];
+    guestList = data.guestList || [];
+    events = data.events || [];
+    moodboardImages = data.moodboard || [];
+    
+    debugLog("Data loaded successfully");
+    updateUI();
+    clearTimeout(loadingTimeout);
+    hideLoadingScreen();
+    
+    const partners = data.partners || [];
+    partnerId = partners.find(id => id !== userId);
+    
+    // Set up realtime listener after initial load
+    database.ref(`couples/${coupleId}`).on('value', (snapshot) => {
+      debugLog("Realtime update received");
+      const updatedData = snapshot.val();
+      if (updatedData) {
+        // Update local data if needed
+        if (updatedData.weddingData) weddingData = updatedData.weddingData;
+        if (updatedData.tasks) tasks = updatedData.tasks;
+        if (updatedData.expenses) expenses = updatedData.expenses;
+        if (updatedData.guestList) guestList = updatedData.guestList;
+        if (updatedData.events) events = updatedData.events;
+        if (updatedData.moodboard) moodboardImages = updatedData.moodboard;
         
         updateUI();
-        hideLoadingScreen();
-        
-        const partners = data.partners || [];
-        partnerId = partners.find(id => id !== userId);
       }
     });
+    
   } catch (error) {
     console.error("Error loading couple data:", error);
     showNotification("Failed to load wedding data", 'error');
+    clearTimeout(loadingTimeout);
     hideLoadingScreen();
   }
 }
 
 function updateUI() {
+  debugLog("Updating UI with current data");
+  
   // Update header
   if (weddingData.yourName) {
     yourNameDisplay.textContent = weddingData.yourName;
@@ -259,7 +316,6 @@ function updateCountdown(weddingDate) {
   
   setTimeout(() => updateCountdown(weddingDate), 1000);
 }
-
 // Save wedding details
 userForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -821,7 +877,6 @@ function showNotification(message, type = 'success') {
   notification.textContent = message;
   notification.className = 'notification';
   
-  // Set color based on type
   if (type === 'error') {
     notification.style.backgroundColor = 'var(--danger-color)';
   } else if (type === 'warning') {
@@ -832,7 +887,6 @@ function showNotification(message, type = 'success') {
   
   notification.classList.add('show');
   
-  // Hide after 5 seconds
   setTimeout(() => {
     notification.classList.remove('show');
   }, 5000);
@@ -845,8 +899,18 @@ function showLoading() {
 
 function hideLoading() {
   loadingScreen.style.opacity = '0';
-  setTimeout(() => loadingScreen.style.display = 'none', 500);
+  setTimeout(() => {
+    loadingScreen.style.display = 'none';
+  }, 500);
 }
+
+// Debug function to manually hide loading screen
+window.forceHideLoading = function() {
+  console.warn("Manually hiding loading screen");
+  clearTimeout(loadingTimeout);
+  hideLoading();
+};
+
 
 // Smooth scrolling for navigation
 document.querySelectorAll('nav a').forEach(anchor => {
